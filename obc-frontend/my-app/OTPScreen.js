@@ -1,64 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import Svg, { Circle, Rect, Path } from 'react-native-svg';
 import axios from 'axios';
-import OTPVerify from 'react-native-otp-verify';
-
 
 // Replace with your actual backend URL
-const API_URL = 'http://192.168.89.14:8000'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
+const API_URL = 'http://192.168.1.8:8000'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
 
-export default function OTPScreen({ navigation }) {
+const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [countdown, setCountdown] = useState(0);
   const [resendDisabled, setResendDisabled] = useState(false);
-
-  // Start listening for OTP when screen loads
-  useEffect(() => {
-    // Get the hash for SMS listener
-    OTPVerify.getHash()
-      .then(hash => {
-        console.log('SMS Retriever hash: ', hash);
-        // You can send this hash to your backend for including in the SMS
-      })
-      .catch(error => console.log(error));
-
-    // Start listening for OTP
-    OTPVerify.startListener();
-    
-    // Handle OTP detection
-    const otpHandler = (message) => {
-      try {
-        console.log('SMS received:', message);
-        // Extract OTP code from message using regex
-        // This regex pattern looks for 6 consecutive digits in the message
-        const otpPattern = /(\d{6})/;
-        const match = message.match(otpPattern);
-        
-        if (match && match[1]) {
-          const receivedOtp = match[1];
-          console.log('OTP detected:', receivedOtp);
-          setOtp(receivedOtp);
-          // Optionally auto-submit OTP
-          // handleVerifyOtp();
-        }
-      } catch (error) {
-        console.log('Error parsing OTP:', error);
-      }
-    };
-
-    // Add and remove listeners
-    OTPVerify.addListener(otpHandler);
-    
-    return () => {
-      OTPVerify.removeListener();
-    };
-  }, []);
-
-
+  const [countryCode, setCountryCode] = useState('+91');
+  
+  const inputRefs = useRef([]);
+  
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -66,7 +38,7 @@ export default function OTPScreen({ navigation }) {
       setResendDisabled(true);
     } else {
       setResendDisabled(false);
-    }
+    }      
     return () => clearTimeout(timer);
   }, [countdown]);
 
@@ -83,13 +55,13 @@ export default function OTPScreen({ navigation }) {
     setIsLoading(true);
     try {
       // Format phone number with country code if needed
-      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
+      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber}`;
       
+      // Send the request to your backend
       await axios.post(`${API_URL}/api/otp/request/`, {
         phone_number: formattedPhoneNumber,
       });
       
-      Alert.alert('Success', 'OTP sent to your phone number.');
       setShowOtpInput(true);
       startResendTimer();
     } catch (error) {
@@ -99,19 +71,39 @@ export default function OTPScreen({ navigation }) {
       setIsLoading(false);
     }
   };
+  
+  const handleOtpChange = (index, value) => {
+    // Update the OTP array
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    
+    // Move to next input if current one is filled
+    if (value && index < otp.length - 1) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+  
+  const handleKeyPress = (index, e) => {
+    // Move to previous input on backspace press
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
 
   const handleVerifyOtp = async () => {
-    if (!otp.trim() || otp.length !== 6) {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the 6-digit OTP.');
       return;
     }
     
     setIsLoading(true);
     try {
-      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
+      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber}`;
       const response = await axios.post(`${API_URL}/api/otp/verify/`, {
         phone_number: formattedPhoneNumber,
-        otp_code: otp,
+        otp_code: otpCode,
       });
 
       // Store tokens securely
@@ -129,7 +121,7 @@ export default function OTPScreen({ navigation }) {
             text: 'Continue',
             onPress: () => {
               // Navigate to home screen or profile setup for new users
-              // navigation.navigate(response.data.is_new_user ? 'ProfileSetup' : 'Home');
+              navigation.navigate(response.data.is_new_user ? 'ProfileSetup' : 'Home');
             }
           }
         ]
@@ -142,194 +134,345 @@ export default function OTPScreen({ navigation }) {
     }
   };
 
+  const handleBack = () => {
+    if (showOtpInput) {
+      setShowOtpInput(false);
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  const handleSkip = () => {
+    // Navigate to the home screen or next screen
+    navigation.navigate('Home');
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Phone Login</Text>
-      
-      {!showOtpInput ? (
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>Enter your phone number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 9876543210"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
-          <Text style={styles.hint}>We'll send a verification code to this number</Text>
-          
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.disabledButton]} 
-            onPress={handleRequestOtp}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Get OTP</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.formContainer}>
-          <Text style={styles.label}>Enter verification code</Text>
-          <Text style={styles.subtitle}>We've sent an OTP to {phoneNumber}</Text>
-          
-          <TextInput
-            style={styles.otpInput}
-            placeholder="6-digit code"
-            keyboardType="number-pad"
-            value={otp}
-            onChangeText={setOtp}
-            maxLength={6}
-          />
-          
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.disabledButton]} 
-            onPress={handleVerifyOtp}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Verify</Text>
-            )}
-          </TouchableOpacity>
-          
-          {countdown > 0 ? (
-            <Text style={styles.resendText}>Resend OTP in {countdown}s</Text>
-          ) : (
-            <TouchableOpacity 
-              style={styles.resendButton} 
-              onPress={handleRequestOtp}
-              disabled={resendDisabled || isLoading}
-            >
-              <Text style={styles.resendButtonText}>Resend OTP</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+              <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
+            {!showOtpInput && (
+              <Text style={styles.skipText} onPress={handleSkip}>
+                Skip
+              </Text>
+            )}
+          </View>
+
+          {!showOtpInput ? (
+            <View style={styles.content}>
+              <Text style={styles.title}>Login with{'\n'}your mobile number.</Text>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.countryCodeContainer}>
+                  <Text style={styles.countryCodeText}>{countryCode}</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="99999 99999"
+                  keyboardType="phone-pad"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  maxLength={10}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.continueButton}
+                onPress={handleRequestOtp}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Text style={styles.continueButtonText}>Continue</Text>
+                    <Text style={styles.arrowIcon}>→</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.termsContainer}>
+                <Text style={styles.termsText}>By logging in, you agree to</Text>
+                <View style={styles.bulletPoint}>
+                  <Text style={styles.dot}>•</Text>
+                  <Text style={styles.termsLink}>
+                    OnlyBigCar's Privacy Policy and Terms & Conditions
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.otpContent}>
+              <View style={styles.imageContainer}>
+                <Svg width="150" height="150" viewBox="0 0 300 300">
+                  {/* Background glow */}
+                  <Circle cx="150" cy="150" r="120" fill="#FFF1E6" opacity="0.8"/>
+                  <Circle cx="150" cy="150" r="100" fill="#FFE4D4" opacity="0.6"/>
+                  
+                  {/* Phone outline */}
+                  <Rect x="110" y="70" width="80" height="160" rx="15" ry="15" fill="#fff" stroke="#FF8A48" strokeWidth="4"/>
+                  
+                  {/* Phone camera and speaker */}
+                  <Circle cx="150" cy="85" r="3" fill="#DDDDDD"/>
+                  <Rect x="137" y="95" width="26" height="4" rx="2" ry="2" fill="#DDDDDD"/>
+                  
+                  {/* Verification checkmark badge */}
+                  <Circle cx="150" cy="150" r="30" fill="#A5D6A7"/>
+                  <Path d="M140 150 L147 157 L162 142" stroke="white" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </Svg>
+              </View>       
+              
+              <Text style={styles.otpTitle}>Enter OTP</Text>
+              <Text style={styles.otpSubtitle}>
+                We have sent you access code via SMS{'\n'}mobile number verification
+              </Text>
+
+              <View style={styles.otpInputsContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    style={styles.otpInputBox}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    value={digit}
+                    onChangeText={(value) => handleOtpChange(index, value)}
+                    onKeyPress={(e) => handleKeyPress(index, e)}
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleVerifyOtp}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Submit</Text>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.resendContainer}>
+                <Text style={styles.resendText}>Didn't Receive the OTP?</Text>
+                <TouchableOpacity 
+                  onPress={handleRequestOtp} 
+                  disabled={resendDisabled || isLoading}
+                >
+                  <Text style={[
+                    styles.resendCodeText,
+                    resendDisabled && styles.resendDisabled
+                  ]}>
+                    Resend Code
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
-          
-          <TouchableOpacity onPress={() => setShowOtpInput(false)}>
-            <Text style={styles.changeNumber}>Change phone number</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      
-      {userId && (
-        <View style={styles.successContainer}>
-          <Text style={styles.successText}>
-            Login successful! User ID: {userId}
-          </Text>
-        </View>
-      )}
-    </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    backgroundColor: 'white',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 60,
-    marginBottom: 30,
-    textAlign: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
   },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  backButton: {
+    padding: 8,
   },
-  label: {
+  backButtonText: {
+    fontSize: 24,
+    color: '#333',
+  },
+  skipText: {
+    color: '#E53935',
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: '500',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 36,
+    color: '#333',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 4,
+    height: 56,
+  },
+  countryCodeContainer: {
+    width: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#E0E0E0',
+  },
+  countryCodeText: {
+    fontSize: 16,
+    color: '#333',
   },
   input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    flex: 1,
     fontSize: 16,
-    marginBottom: 10,
-  },
-  otpInput: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
     paddingHorizontal: 15,
-    fontSize: 18,
-    letterSpacing: 8,
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#333',
   },
-  hint: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    height: 50,
-    borderRadius: 8,
+  continueButton: {
+    backgroundColor: '#E53935',
+    borderRadius: 4,
+    height: 56,
+    flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  continueButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    marginRight: 8,
+  },
+  arrowIcon: {
+    color: '#FFFFFF',
+    fontSize: 20,
+  },
+  termsContainer: {
+    marginTop: 16,
+  },
+  termsText: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 4,
+  },
+  bulletPoint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 2,
+  },
+  dot: {
+    marginRight: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#757575',
+  },
+  termsLink: {
+    fontSize: 14,
+    color: '#757575',
+    flexShrink: 1,
+  },
+  
+  // OTP Screen styles
+  otpContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingTop: 20,
+  },
+  imageContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 150,
+  },
+  verificationImage: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
+  },
+  otpTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  otpSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 30,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  otpInputsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    marginBottom: 30,
+  },
+  otpInputBox: {
+    width: 45,
+    height: 60,
+    borderWidth: 1,
+    borderColor: '#E53935',
+    borderRadius: 5,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    backgroundColor: '#FFFFFF',
+    color: '#333',
+  },
+  submitButton: {
+    backgroundColor: '#E53935',
+    borderRadius: 4,
+    height: 56,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  resendContainer: {
     alignItems: 'center',
     marginTop: 10,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
-  },
   resendText: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: '#666',
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 4,
   },
-  resendButton: {
-    marginTop: 20,
-    padding: 10,
-    alignSelf: 'center',
+  resendCodeText: {
+    fontSize: 14,
+    color: '#E53935',
+    fontWeight: '500',
   },
-  resendButtonText: {
-    color: '#007BFF',
-    fontSize: 16,
+  resendDisabled: {
+    color: '#BDBDBD',
   },
-  changeNumber: {
-    marginTop: 15,
-    textAlign: 'center',
-    color: '#007BFF',
-    textDecorationLine: 'underline',
-  },
-  successContainer: {
-    marginTop: 30,
-    padding: 15,
-    backgroundColor: '#d4edda',
-    borderRadius: 8,
-    borderColor: '#c3e6cb',
-    borderWidth: 1,
-  },
-  successText: {
-    color: '#155724',
-    textAlign: 'center',
-    fontSize: 16,
-  }
 });
+
+export default LoginScreen;
