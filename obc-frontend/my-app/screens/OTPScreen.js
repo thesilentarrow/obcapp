@@ -17,7 +17,7 @@ import Svg, { Circle, Rect, Path } from 'react-native-svg';
 import axios from 'axios';
 
 // Replace with your actual backend URL
-const API_URL = 'http://192.168.1.8:8000'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
+const API_URL = 'http://192.168.9.38:8000'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
 
 const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');

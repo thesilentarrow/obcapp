@@ -13,16 +13,18 @@ import {
   Dimensions,
 } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
+// If needed, add this import
+import { RootStackParamList } from '../types/navigation';
 
 // Define the app's navigation param types
-type RootStackParamList = {
-  Home: undefined;
-  Account: undefined;
-  Store: undefined;
-  SOS: undefined;
-  Contact: undefined;
-  ServiceDetails: { serviceId: string };
-};
+// type RootStackParamList = {
+//   Home: undefined;
+//   Account: undefined;
+//   Store: undefined;
+//   SOS: undefined;
+//   Contact: undefined;
+//   ServiceDetails: { serviceId: string };
+// };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -93,13 +95,14 @@ const ContactIcon = () => (
 // Import required components from react-native-svg
 import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 
+
 // Service Icon Components
 const PeriodicServiceIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
+  <Svg height="40" width="40" viewBox="0 0 30 30">
+    <Circle cx="15" cy="15" r="12" fill="#FFE0E0" />
     <Path
       fill="#E53935"
-      d="M7,13.5h8.5V12H8.25V7.5H7V13.5z M12,2C6.48,2,2,6.48,2,12c0,5.52,4.48,10,10,10s10-4.48,10-10C22,6.48,17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"
+      d="M6,9.3L3.9,5.8l1.4-1.4l3.5,2.1v1.4l3.6,3.6c0,0.1,0,0.2,0,0.3L11.1,13L7.4,9.3H6z M21,17.8c-0.3,0-0.5,0-0.8,0 c0,0,0,0,0,0c-0.7,0-1.3-0.1-1.9-0.2l-2.1,2.4l4.7,5.3c1.1,1.2,3,1.3,4.1,0.1c1.2-1.2,1.1-3-0.1-4.1L21,17.8z M24.4,14 c1.6-1.6,2.1-4,1.5-6.1c-0.1-0.4-0.6-0.5-0.8-0.2l-3.5,3.5l-2.8-2.8l3.5-3.5c0.3-0.3,0.2-0.7-0.2-0.8C20,3.4,17.6,3.9,16,5.6 c-1.8,1.8-2.2,4.6-1.2,6.8l-10,8.9c-1.2,1.1-1.3,3-0.1,4.1l0,0c1.2,1.2,3,1.1,4.1-0.1l8.9-10C19.9,16.3,22.6,15.9,24.4,14z"
     />
   </Svg>
 );
@@ -241,14 +244,14 @@ const App = () => {
         headerShown: false
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Home" component={HomePageScreen} />
       {/* Other screens would be defined here */}
     </Stack.Navigator>
   );
 };
 
 // Home Screen Component
-const HomeScreen = () => {
+const HomePageScreen = () => {
   // Add state to track current carousel index
   const [activeCarouselIndex, setActiveCarouselIndex] = React.useState(0);
   
@@ -333,7 +336,7 @@ const HomeScreen = () => {
     { 
       id: '1', 
       type: 'image',
-      source: require('./assets/carbanner.png'),
+      source: require('../assets/carbanner.png'),
       
     },
     { 
@@ -386,7 +389,7 @@ const HomeScreen = () => {
           </View>
           {/* Updated car image to match the provided design */}
           <Image 
-            source={require('./assets/car-thumb.png')} 
+            source={require('../assets/car-thumb.png')} 
             style={styles.carImage}
           />
         </View>
@@ -440,9 +443,7 @@ const HomeScreen = () => {
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity style={styles.bookNowButton}>
-                    <Text style={styles.bookNowText}>BookNow</Text>
-                  </TouchableOpacity>
+                  
                 </>
               )}
               
@@ -596,12 +597,14 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    // Enhanced shadow properties
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
   },
+
   searchInput: {
     flex: 1,
     marginLeft: 8,
@@ -612,16 +615,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bannerContainer: {
-    paddingBottom: 16,
+    paddingBottom: 10,
   },
   banner: {
     height: 180,
-    margin: 16,
-    marginBottom: 8,
+    margin: 10,
+    marginBottom: 1,
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',
-    padding: 20,
+    padding: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
@@ -664,17 +667,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     marginBottom: 6,
   },
-  bookNowButton: {
-    backgroundColor: 'white',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginLeft: 20,
-  },
-  bookNowText: {
-    color: '#212121',
-    fontWeight: '500',
-  },
+  
   indicators: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -786,7 +779,7 @@ const styles = StyleSheet.create({
 });
 
 // Export HomeScreen directly for more flexibility
-export { HomeScreen };
+export { HomePageScreen };
 
 // Export the navigator without NavigationContainer
 export default App;
