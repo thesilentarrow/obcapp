@@ -1,5 +1,6 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import { ServiceData } from '../screens/ProductScreen'; // Adjust the import path as needed
 
 export type RootStackParamList = {
   // Auth screens
@@ -8,6 +9,7 @@ export type RootStackParamList = {
   // Main screens
   HomePage: undefined;
   Home: undefined;
+  MembershipDetails: undefined;
   
   // Service screens
   Account: undefined;
@@ -15,6 +17,11 @@ export type RootStackParamList = {
   SOS: undefined;
   Contact: undefined;
   ServiceDetails: { serviceId: string };
+  ProductScreen: { 
+    categorySlug: string; 
+    categoryName: string; 
+  };
+  ServiceDetailScreen:{service:ServiceData};
   
   // Selection screens
   CitySelection: undefined;

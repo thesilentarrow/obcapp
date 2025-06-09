@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -24,6 +25,7 @@ import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 // Updated RootStackParamList with all screens
 export type RootStackParamList = {
   Home: undefined;
+  HomePage: undefined;
   CitySelection: undefined;
   BrandSelection: { selectedCity: string };
   ModelSelection: { 
@@ -65,7 +67,7 @@ export default function HomeScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.header}>
-        <View style={styles.userIconContainer}>
+        <View style={styles.userIconContainer}> 
           <FontAwesome name="user-circle-o" size={24} color="#333" />
         </View>
         <View style={styles.locationContainer}>
@@ -79,13 +81,20 @@ export default function HomeScreen({ navigation }: Props) {
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.cardsContainer}>
-          {/* Zepto Card */}
+          
           <View style={styles.topRow}>
-            {/* Zepto Card */}
+            
             <TouchableOpacity 
               style={[styles.card, styles.zeptoCard]} 
               activeOpacity={0.9}
-              onPress={() => navigation.navigate('CitySelection')}
+              onPress={async() => {
+                const accessToken = await AsyncStorage.getItem('accessToken');
+                if (!accessToken){
+                  navigation.navigate('HomePage');
+                }else{
+                  navigation.navigate('CitySelection');
+                }
+              }}
             >
               <Text style={styles.zeptoLogo}>Car Servicing</Text>
               <Text style={styles.cardSubtext}>Best Luxury Car Servicing in all over India</Text>
@@ -95,7 +104,7 @@ export default function HomeScreen({ navigation }: Props) {
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            {/* Zepto Café Card */}
+           
             <TouchableOpacity 
               style={[styles.card, styles.zeptoCafeCard]} 
               activeOpacity={0.9}

@@ -16,7 +16,7 @@ type Brand =
   | "Honda"
   | "Mercedes Benz"
   | "MG"
-  | "Toyota"
+  | "Toyota"           
   | "Skoda"
   | "Renault"
   | "Volkswagen"

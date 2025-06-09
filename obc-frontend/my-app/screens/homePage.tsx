@@ -13,9 +13,12 @@ import {
   Dimensions,
 } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
+
 // If needed, add this import
 import { RootStackParamList } from '../types/navigation';
-
+import type {StackNavigationProp} from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage'; //for checkig login status
+import MembershipDetailsScreen from './MembershipDetailsScreen'; // Import the MembershipCard component
 // Define the app's navigation param types
 // type RootStackParamList = {
 //   Home: undefined;
@@ -27,6 +30,274 @@ import { RootStackParamList } from '../types/navigation';
 // };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+import { NavigationProp } from '@react-navigation/native';
+
+type MembershipCardProps = {
+  navigation: NavigationProp<RootStackParamList>;
+}
+
+export const handleLogout = async(navigation:NavigationProp<RootStackParamList>)=>{
+  try{
+    await AsyncStorage.removeItem('accessToken');
+    await AsyncStorage.removeItem('refreshToken');
+    await AsyncStorage.removeItem('userId');
+    await AsyncStorage.removeItem('userPhoneNumber');
+    console.log('User logged out successfully');
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    })
+  }catch(e){
+    console.error('Logout Error:', e);
+  }
+}
+
+const MembershipCard = ({navigation}:MembershipCardProps) => {
+  const handleJoinNow =()=>{
+    navigation.navigate('MembershipDetails');
+  }
+  return (
+    <View style={membershipStyles.membershipContainer}>
+      <View style={membershipStyles.membershipCard}>
+        {/* Background gradient effect using overlays */}
+        <View style={membershipStyles.membershipBackground} />
+        <View style={membershipStyles.membershipGradientOverlay} />
+        
+        {/* Decorative elements */}
+        <View style={membershipStyles.decorativeCircle1} />
+        <View style={membershipStyles.decorativeCircle2} />
+        <View style={membershipStyles.decorativeCircle3} />
+        
+        <View style={membershipStyles.membershipContent}>
+          {/* Header Section */}
+          <View style={membershipStyles.membershipHeader}>
+            <View style={membershipStyles.crownIconContainer}>
+              <Svg height="24" width="24" viewBox="0 0 24 24">
+                <Path
+                  fill="#FFD700"
+                  d="M5 16L3 12.5L5.5 11L7.5 13L12 8L16.5 13L18.5 11L21 12.5L19 16H5ZM7 18H17V20H7V18Z"
+                />
+              </Svg>
+            </View>
+            <Text style={membershipStyles.membershipTitle}>Premium Membership</Text>
+            <Text style={membershipStyles.membershipSubtitle}>Unlock Exclusive Benefits</Text>
+          </View>
+          
+          {/* Benefits Section */}
+          <View style={membershipStyles.benefitsContainer}>
+            <View style={membershipStyles.benefitItem}>
+              <View style={membershipStyles.benefitIcon}>
+                <Svg height="16" width="16" viewBox="0 0 24 24">
+                  <Path
+                    fill="#FFFFFF"
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                  />
+                </Svg>
+              </View>
+              <Text style={membershipStyles.benefitText}>Priority Service Booking</Text>
+            </View>
+            
+            <View style={membershipStyles.benefitItem}>
+              <View style={membershipStyles.benefitIcon}>
+                <Svg height="16" width="16" viewBox="0 0 24 24">
+                  <Path
+                    fill="#FFFFFF"
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                  />
+                </Svg>
+              </View>
+              <Text style={membershipStyles.benefitText}>Up to 25% Discount</Text>
+            </View>
+            
+            <View style={membershipStyles.benefitItem}>
+              <View style={membershipStyles.benefitIcon}>
+                <Svg height="16" width="16" viewBox="0 0 24 24">
+                  <Path
+                    fill="#FFFFFF"
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                  />
+                </Svg>
+              </View>
+              <Text style={membershipStyles.benefitText}>Free Home Pickup & Drop</Text>
+            </View>
+          </View>
+          
+          {/* CTA Section */}
+          <View style={membershipStyles.ctaContainer}>
+            <TouchableOpacity style={membershipStyles.membershipButton} onPress={handleJoinNow}>
+              <Text style={membershipStyles.membershipButtonText}>Join Now</Text>
+              <Svg height="16" width="16" viewBox="0 0 24 24" style={membershipStyles.arrowIcon}>
+                <Path
+                  fill="#B71C1C"
+                  d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
+                />
+              </Svg>
+            </TouchableOpacity>
+            
+            <View style={membershipStyles.priceContainer}>
+              <Text style={membershipStyles.priceText}>Starting from</Text>
+              <Text style={membershipStyles.priceAmount}>₹999<Text style={membershipStyles.priceUnit}>/year</Text></Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const membershipStyles = StyleSheet.create({
+  membershipContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  membershipCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    minHeight: 200,
+    shadowColor: '#E53935',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  membershipBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#E53935',
+  },
+  membershipGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(183, 28, 28, 0.8)',
+  },
+  decorativeCircle1: {
+    position: 'absolute',
+    top: -30,
+    right: -30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  decorativeCircle2: {
+    position: 'absolute',
+    bottom: -20,
+    left: -20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  decorativeCircle3: {
+    position: 'absolute',
+    top: '50%',
+    right: -10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  membershipContent: {
+    position: 'relative',
+    zIndex: 1,
+    padding: 20,
+  },
+  membershipHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  crownIconContainer: {
+    marginBottom: 8,
+  },
+  membershipTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  membershipSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+  },
+  benefitsContainer: {
+    marginBottom: 20,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  benefitIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  benefitText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  ctaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  membershipButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  membershipButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#B71C1C',
+    marginRight: 8,
+  },
+  arrowIcon: {
+    marginLeft: 4,
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+  },
+  priceText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 2,
+  },
+  priceAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  priceUnit: {
+    fontSize: 12,
+    fontWeight: 'normal',
+  },
+});
+
 
 // SVG Components for icons
 const LocationIcon = () => (
@@ -119,11 +390,12 @@ const ACServiceIcon = () => (
 
 const TyreWheelIcon = () => (
   <Svg height="40" width="40" viewBox="0 0 24 24">
+    
     <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
     <Circle cx="12" cy="12" r="8" fill="#444444" />
     <Circle cx="12" cy="12" r="3" fill="#F0F0F0" />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8 S16.42,20,12,20z"
     />
   </Svg>
@@ -132,9 +404,9 @@ const TyreWheelIcon = () => (
 const BatteryIcon = () => (
   <Svg height="40" width="40" viewBox="0 0 24 24">
     <Rect x="4" y="8" width="16" height="12" rx="1" fill="#F0F0F0" />
-    <Rect x="9" y="6" width="6" height="2" fill="#444444" />
+    <Rect x="9" y="6" width="6" height="2" fill="#E53935" />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M15.67,4H14V2h-4v2H8.33C7.6,4,7,4.6,7,5.33v15.33C7,21.4,7.6,22,8.33,22h7.33c0.74,0,1.34-0.6,1.34-1.33V5.33 C17,4.6,16.4,4,15.67,4z M13,18h-2v-2h2V18z M13,14h-2V8h2V14z"
     />
   </Svg>
@@ -174,7 +446,7 @@ const CarServicesIcon = () => (
   <Svg height="40" width="40" viewBox="0 0 24 24">
     <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M19,3h-4.18C14.4,1.84,13.3,1,12,1S9.6,1.84,9.18,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5 C21,3.9,20.1,3,19,3z M12,2.75c0.41,0,0.75,0.34,0.75,0.75S12.41,4.25,12,4.25s-0.75-0.34-0.75-0.75S11.59,2.75,12,2.75z M9.1,17.1 l-2.83-2.83l1.41-1.41l1.41,1.41L14.8,8.6l1.41,1.41L9.1,17.1z"
     />
   </Svg>
@@ -198,11 +470,11 @@ const WindshieldIcon = () => (
   <Svg height="40" width="40" viewBox="0 0 24 24">
     <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M18.25,3.5H5.75C4.78,3.5,4,4.28,4,5.25v12.5c0,0.97,0.78,1.75,1.75,1.75h12.5c0.97,0,1.75-0.78,1.75-1.75V5.25 C20,4.28,19.22,3.5,18.25,3.5z M18,17.75H6c-0.41,0-0.75-0.34-0.75-0.75V6c0-0.41,0.34-0.75,0.75-0.75h12c0.41,0,0.75,0.34,0.75,0.75 v11C18.75,17.41,18.41,17.75,18,17.75z"
     />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M17,7l-7,7l-3-3l-1.5,1.5L9,16l8.5-8.5L17,7z"
     />
   </Svg>
@@ -211,14 +483,14 @@ const WindshieldIcon = () => (
 const SuspensionIcon = () => (
   <Svg height="40" width="40" viewBox="0 0 24 24">
     <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
-    <Circle cx="9" cy="8" r="2" fill="#444444" />
-    <Circle cx="15" cy="8" r="2" fill="#444444" />
+    <Circle cx="9" cy="8" r="2" fill="#E53935" />
+    <Circle cx="15" cy="8" r="2" fill="#E53935" />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M9,14h6v1.5H9z"
     />
     <Path
-      fill="#444444"
+      fill="#E53935"
       d="M19.21,12.94L17.29,11l-1.42,1.42L18.8,15.34L19.21,12.94z M6.71,11L4.79,12.94l0.41,2.39l2.93-2.92L6.71,11z"
     />
   </Svg>
@@ -250,8 +522,13 @@ const App = () => {
   );
 };
 
+type HomePageNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomePageProps={
+  navigation: HomePageNavigationProp;
+}
+
 // Home Screen Component
-const HomePageScreen = () => {
+const HomePageScreen = ({navigation}:HomePageProps) => {
   // Add state to track current carousel index
   const [activeCarouselIndex, setActiveCarouselIndex] = React.useState(0);
   
@@ -261,25 +538,32 @@ const HomePageScreen = () => {
       id: 'periodic', 
       title: 'Periodic\nServices', 
       icon: <PeriodicServiceIcon />,
+      categorySlug: 'periodic-service',
+      categoryName: 'Periodic Services'
     //   badge: '2Years Warranty*'
     },
     { 
       id: 'ac', 
       title: 'AC Service\n&Repair', 
       icon: <ACServiceIcon />,
+      categorySlug: 'ac-service',
+      categoryName: 'AC Service & Repair'
     //   badge: 'Season Sale'
     },
     { 
       id: 'tyre', 
       title: 'Tyres&\nWheel Care', 
       icon: <TyreWheelIcon />,
+      categorySlug: 'tyre-wheel-care',
+      categoryName: 'Tyres & Wheel Care'
     //   badge: ''
     },
     { 
       id: 'battery', 
       title: 'Batteries', 
       icon: <BatteryIcon />,
-      badge: ''
+      categorySlug: 'battery-services',
+      categoryName: 'Battery Services'
     },
     { 
       id: 'denting', 
@@ -351,6 +635,20 @@ const HomePageScreen = () => {
     { id: '5', type: 'empty' },
   ];
 
+  const handleServicePress = (service: typeof services[0]) => {
+    console.log(`Service pressed: ${service.title}`);
+    if (service.categorySlug && service.categoryName) {
+      navigation.navigate('ProductScreen', {
+        categorySlug: service.categorySlug,
+        categoryName: service.categoryName
+      });
+    } else {
+      // Handle the case where categorySlug or categoryName is undefined
+      console.log('Service lacks required navigation properties');
+      // You could show an alert or navigate to a default screen instead
+    }
+  }
+
   // Function to go to next carousel item
   const nextCarouselItem = () => {
     setActiveCarouselIndex((prevIndex) => 
@@ -370,6 +668,38 @@ const HomePageScreen = () => {
     setActiveCarouselIndex(index);
   };
 
+  const checkIsUserLoggedIn = async(): Promise<boolean>=>{
+    try{
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      console.log('Access Token:', accessToken);
+      return !!accessToken;
+    }catch(e){
+      console.error("Failed to read login status from AsyncStorage", e);
+      return false;
+    }
+  };
+
+  const getUserPhoneNumber = async():Promise<string | null>=>{
+    try{
+      const phoneNumber = await AsyncStorage.getItem('userPhoneNumber');
+      return phoneNumber;
+    }catch(e){
+      console.error("Failed to read phone number from AsyncStorage", e);
+      return null;
+    }
+  }
+
+  const handleCarImagePress = async()=>{
+    const isLoggedIn = await checkIsUserLoggedIn();
+    console.log('User is logged in:', isLoggedIn);
+    if(!isLoggedIn){
+      navigation.navigate('Login');
+    }else{
+      const phoneNumber = await getUserPhoneNumber();
+      console.log('User is logged in, Phone number:', phoneNumber);
+    }
+  }; 
+
   return (
     <>
       <StatusBar
@@ -387,11 +717,16 @@ const HomePageScreen = () => {
               <Text style={styles.locationSubtitle}>Sector 44 Gurugram, Gurgaon Division Haryana.</Text>
             </View>
           </View>
+           
           {/* Updated car image to match the provided design */}
+          <TouchableOpacity onPress={handleCarImagePress}>
+
           <Image 
             source={require('../assets/car-thumb.png')} 
             style={styles.carImage}
           />
+          </TouchableOpacity>
+
         </View>
         
         {/* Search Bar - Updated to match the image */}
@@ -481,6 +816,7 @@ const HomePageScreen = () => {
             </View>
           </View>
           
+         
           {/* Services Grid */}
           <View style={styles.servicesContainer}>
             {services.map((service, index) => (
@@ -490,6 +826,8 @@ const HomePageScreen = () => {
                   styles.serviceItem,
                   index % 4 === 3 && styles.lastInRow,
                 ]}
+                onPress={() => handleServicePress(service)}
+                
               >
                 {service.badge && (
                   <View style={[
@@ -509,6 +847,7 @@ const HomePageScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
+        <MembershipCard navigation={navigation} />
           
           {/* Bottom padding */}
           <View style={{ height: 20 }} />
@@ -521,7 +860,7 @@ const HomePageScreen = () => {
             <Text style={[styles.navText, styles.activeNavText]}>Home</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Account')}>
             <AccountIcon />
             <Text style={styles.navText}>Account</Text>
           </TouchableOpacity>
@@ -592,7 +931,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 6,
     backgroundColor: '#FFFFFF',
     borderRadius: 25,
     borderWidth: 1,

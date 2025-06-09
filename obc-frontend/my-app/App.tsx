@@ -12,6 +12,10 @@ import HomeScreen from './screens/HomeScreen'; // Import HomeScreen
 
 // Import the navigation types
 import { RootStackParamList } from './types/navigation';
+import MembershipDetailsScreen from './screens/MembershipDetailsScreen';
+import AccountScreen from './screens/AccountScreen';
+import ProductScreen from './screens/ProductScreen';
+import ServiceDetailScreen from './screens/ServiceDetailScreen';
 
 // Add the type to createStackNavigator
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,6 +31,10 @@ export default function App() {
         <Stack.Screen name="BrandSelection" component={BrandSelectionScreen} />
         <Stack.Screen name="ModelSelection" component={ModelSelectionScreen} />
         <Stack.Screen name="FuelSelection" component={FuelSelectionScreen} />
+        <Stack.Screen name="MembershipDetails" component={MembershipDetailsScreen} />
+        <Stack.Screen name="Account" component={AccountScreen}/>
+        <Stack.Screen name='ProductScreen' component ={ProductScreen}/>
+        <Stack.Screen name="ServiceDetailScreen" component={ServiceDetailScreen} />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

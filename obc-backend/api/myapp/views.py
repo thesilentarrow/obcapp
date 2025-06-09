@@ -2,13 +2,13 @@ from django.shortcuts import render
 from django.conf import settings
 # Create your views here.
 from rest_framework import generics
-from .models import UserProfile
+from .models import UserProfile, OTP, ServiceCategory, Service
 from .serializers import UserProfileSerializer 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import OTP
-from .serializers import RequestOTPSerializer, VerifyOTPSerializer # Create these serializers
+from .serializers import *# Create these serializers
 from django.conf import settings
 from twilio.rest import Client
 from django.utils import timezone
@@ -132,3 +132,77 @@ class VerifyOTPView(APIView):
                 print(f"Error verifying OTP: {e}")
                 return Response({'error': 'An error occurred during verification.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#Generic views for ServiceCategory and Service 
+class ServiceCategoryListView(generics.ListAPIView):
+    queryset = ServiceCategory.objects.filter(is_active=True)
+    serializer_class = ServiceCategorySerializer
+
+class ServicesByCategoryView(APIView):
+    def get(self,request,category_identifier):
+        try:
+            try:
+                category = ServiceCategory.objects.get(
+                    slug=category_identifier,
+                    is_active=True
+                )
+            except ServiceCategory.DoesNotExist:
+                #if slug not found, try by name
+                category = ServiceCategory.objects.get(
+                    name__iexact=category_identifier.replace('-', ' '),
+                    is_active=True
+                )
+
+            services = Service.objects.filter(
+                category=category,
+                is_active=True
+            ).order_by('-is_featured','created_at')
+            serializer = ServiceSerializer(services, many=True)
+            
+            return Response({
+                'category':{
+                    'id': category.id,
+                    'name': category.name,
+                    'description': category.description,
+                    'icon': category.icon,
+                    'slug': category.slug,
+                },
+                'services': serializer.data,
+                'total_services': services.count()
+            }, status=status.HTTP_200_OK)
+        
+        except ServiceCategory.DoesNotExist:
+            return Response({
+                'error': f'Service category "{category_identifier}" not found.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#returns all active services
+class AllServicesView(generics.ListAPIView):
+    queryset= Service.objects.filter(is_active=True).select_related('category')
+    serializer_class = ServiceSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        category_id = self.request.query_params.get('category_id', None)
+        is_featured = self.request.query_params.get('featured', None)
+        search = self.request.query_params.get('search', None)
+
+        if category_id:
+            queryset= queryset.filter(category_id=category_id)
+        if is_featured == 'true':
+            queryset = queryset.filter(is_featured=True)
+        if search:
+            queryset = queryset.filter(
+                models.Q(header__icontains=search) |
+                models.Q(details__icontains=search)
+            )
+        return queryset.order_by('-is_featured','created_at')
+
+
+    

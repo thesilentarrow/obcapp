@@ -14,16 +14,17 @@ import {
   Alert,
 } from 'react-native';
 import Svg, { Circle, Rect, Path } from 'react-native-svg';
-import axios from 'axios';
+import axios from 'axios'; //axios for api requests.  
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 // Replace with your actual backend URL
-const API_URL = 'http://192.168.9.38:8000'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
+const API_URL = '  https://6b2b-143-244-61-132.ngrok-free.app'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
 
 const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
   const [userId, setUserId] = useState(null);
   const [countdown, setCountdown] = useState(0);
   const [resendDisabled, setResendDisabled] = useState(false);
@@ -108,7 +109,10 @@ const LoginScreen = ({ navigation }) => {
 
       // Store tokens securely
       // For production, use AsyncStorage or SecureStore:
-      // await SecureStore.setItemAsync('accessToken', response.data.access);
+       await AsyncStorage.setItem('accessToken', response.data.access);
+      await AsyncStorage.setItem('refreshToken', response.data.refresh);
+      await AsyncStorage.setItem('userPhoneNumber', formattedPhoneNumber); // Store phone number
+      await AsyncStorage.setItem('userId', response.data.user_id.toString());
       // await SecureStore.setItemAsync('refreshToken', response.data.refresh);
       
       setUserId(response.data.user_id);
@@ -419,13 +423,13 @@ const styles = StyleSheet.create({
   },
   otpSubtitle: {
     fontSize: 14,
-    color: '#757575',
-    marginBottom: 30,
+    color: '#757575', 
+    marginBottom: 30, 
     textAlign: 'center',
     lineHeight: 20,
   },
   otpInputsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row', 
     justifyContent: 'space-between',
     width: '90%',
     marginBottom: 30,
@@ -444,7 +448,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#E53935',
-    borderRadius: 4,
+    borderRadius: 4, 
     height: 56,
     width: '100%',
     justifyContent: 'center',
