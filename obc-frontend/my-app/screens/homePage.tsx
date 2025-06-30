@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,7 @@ import MembershipDetailsScreen from './MembershipDetailsScreen'; // Import the M
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useIsFocused } from '@react-navigation/native';
 
 type MembershipCardProps = {
   navigation: NavigationProp<RootStackParamList>;
@@ -531,6 +531,12 @@ type HomePageProps={
 const HomePageScreen = ({navigation}:HomePageProps) => {
   // Add state to track current carousel index
   const [activeCarouselIndex, setActiveCarouselIndex] = React.useState(0);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [isLoadingCity, setIsLoadingCity] = useState(true);
+  const isFocused = useIsFocused(); // Hook to check if the screen is focused
+  const flatListRef = useRef<ScrollView>(null);
+
   
   // Services data
   const services = [
@@ -614,6 +620,61 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     //   badge: 'Cashless Claims'
     },
   ];
+  // const isFocused = useIsFocused();
+  // // >>>>>>>> ENSURE BANNERS IS DEFINED HERE <<<<<<<<<<
+  const banners = [
+    { title: "Summer Sale", offer: { percentage: "50" }, image: "https://onlybigcars.com/latest/wp-content/uploads/2024/12/banner-1-e1733223305758.jpg" },
+    { title: "Monsoon Offer", offer: { percentage: "30" }, image: "https://onlybigcars.com/latest/wp-content/uploads/2024/12/banner-2-e1733223340819.jpg" },
+    { title: "Festive Deals", offer: { percentage: "40" }, image: "https://onlybigcars.com/latest/wp-content/uploads/2024/12/banner-3-e1733223371989.jpg" },
+    // ... any other banner objects
+  ];
+
+  useEffect(() => {
+    const loadSelectedCity = async () => {
+      setIsLoadingCity(true);
+      try {
+        const city = await AsyncStorage.getItem('userSelectedCity');
+        if (city !== null) {
+          setSelectedCity(city);
+        } else {
+          setSelectedCity(null);
+          // Optionally, if a city is absolutely required, navigate to selection:
+          // Alert.alert("City Required", "Please select your city to continue.", [
+          //   { text: "Select City", onPress: () => navigation.replace('CitySelection') }
+          // ]);
+        }
+      } catch (error) {
+        console.error('Failed to load city from AsyncStorage', error);
+        setSelectedCity(null); // Fallback to no city
+      } finally {
+        setIsLoadingCity(false);
+      }
+    };
+
+    loadSelectedCity();
+    
+
+    if (isFocused) { // Load city when the screen comes into focus
+      loadSelectedCity();
+    }
+
+    // Auto-scroll banner logic
+    const timer = setInterval(() => {
+      setCurrentBannerIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % banners.length;
+        if (flatListRef.current) {
+          flatListRef.current.scrollTo({
+            x: nextIndex * (Dimensions.get('window').width - 20), // Adjust width based on your banner styling
+            animated: true,
+          });
+        }
+        return nextIndex;
+      });
+    }, 5000); // Change banner every 5 seconds
+
+    return () => clearInterval(timer); // Cleanup timer on unmount
+
+  }, [isFocused, banners.length]);
 
   // Carousel data - updated to include content for each slide
   const carouselItems = [
@@ -710,13 +771,22 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
       <SafeAreaView style={styles.container}>
         {/* Location Header - Updated to match the image */}
         <View style={styles.locationHeader}>
-          <View style={styles.locationContainer}>
-            <LocationIcon />
-            <View style={styles.locationTextContainer}>
-              <Text style={styles.locationTitle}>Sector44</Text>
-              <Text style={styles.locationSubtitle}>Sector 44 Gurugram, Gurgaon Division Haryana.</Text>
-            </View>
-          </View>
+          
+            <View style={styles.locationContainer}>
+          <LocationIcon />
+          <TouchableOpacity
+            style={styles.locationTextContainer}
+            onPress={() => navigation.navigate('CitySelection')} // Navigate to change/select city
+          >
+            <Text style={styles.locationTitle}>
+              {isLoadingCity ? 'Loading City...' : selectedCity || 'Select City'}
+            </Text>
+            <Text style={styles.locationSubtitle}>
+              {isLoadingCity ? ' ' : selectedCity ? 'Tap to change' : 'Tap to select your city'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+          
            
           {/* Updated car image to match the provided design */}
           <TouchableOpacity onPress={handleCarImagePress}>

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from './HomeScreen';
-import axios from 'axios';
+// import { RootStackParamList } from './HomeScreen'; // Using centralized type below
+import { RootStackParamList } from '../types/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'Home'>;
+  navigation: StackNavigationProp<RootStackParamList, 'CitySelection'>; // Corrected Prop type
 };
 
 const cities = [
@@ -32,13 +33,21 @@ const cities = [
 export default function CitySelectionScreen({ navigation }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedCity) {
       Alert.alert('Please select a city');
       return;
     }
-    // Pass selected city to next page
-    navigation.navigate('BrandSelection', { selectedCity });
+    try {
+      await AsyncStorage.setItem('userSelectedCity', selectedCity);
+      console.log('City saved to AsyncStorage:', selectedCity);
+      // Navigate to HomePage after selecting and saving city
+      // Replace current screen in stack so user doesn't go back to city selection
+      navigation.replace('HomePage'); 
+    } catch (error) {
+      console.error('Failed to save city to AsyncStorage', error);
+      Alert.alert('Error', 'Could not save city selection. Please try again.');
+    }
   };
 
   

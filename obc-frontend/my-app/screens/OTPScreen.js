@@ -15,17 +15,17 @@ import {
 } from 'react-native';
 import Svg, { Circle, Rect, Path } from 'react-native-svg';
 import axios from 'axios'; //axios for api requests.  
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
 
 // Replace with your actual backend URL
-const API_URL = '  https://6b2b-143-244-61-132.ngrok-free.app'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
+const API_URL = 'https://7a02-143-244-61-132.ngrok-free.app'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
 
 const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false); 
-  const [userId, setUserId] = useState(null);
+  // const [userId, setUserId] = useState(null); // userId state might not be needed if stored directly
   const [countdown, setCountdown] = useState(0);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countryCode, setCountryCode] = useState('+91');
@@ -55,38 +55,38 @@ const LoginScreen = ({ navigation }) => {
     
     setIsLoading(true);
     try {
-      // Format phone number with country code if needed
-      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber}`;
-      
-      // Send the request to your backend
-      await axios.post(`${API_URL}/api/otp/request/`, {
-        phone_number: formattedPhoneNumber,
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+      // Get app hash (optional, if you are using SMS Retriever API with app hash)
+      // const appSignature = await MyModule.getAppSignature(); // Assuming MyModule is set up
+      // console.log("App Signature:", appSignature);
+
+      const response = await axios.post(`${API_URL}/api/otp/request/`, {
+        phone_number: fullPhoneNumber,
+        // app_hash: appSignature, // Send app_hash if you have it
       });
-      
+      console.log('OTP Request Response:', response.data);
       setShowOtpInput(true);
       startResendTimer();
+      Alert.alert('OTP Sent', 'An OTP has been sent to your phone number.');
     } catch (error) {
-      console.error('Request OTP Error:', error.response?.data || error.message);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to send OTP. Please try again.');
+      console.error('OTP Request Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to send OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
   
   const handleOtpChange = (index, value) => {
-    // Update the OTP array
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
     
-    // Move to next input if current one is filled
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1].focus();
     }
   };
   
   const handleKeyPress = (index, e) => {
-    // Move to previous input on backspace press
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
@@ -95,44 +95,50 @@ const LoginScreen = ({ navigation }) => {
   const handleVerifyOtp = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
-      Alert.alert('Error', 'Please enter the 6-digit OTP.');
+      Alert.alert('Error', 'Please enter the complete 6-digit OTP.');
       return;
     }
     
     setIsLoading(true);
     try {
-      const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber}`;
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
       const response = await axios.post(`${API_URL}/api/otp/verify/`, {
-        phone_number: formattedPhoneNumber,
+        phone_number: fullPhoneNumber,
         otp_code: otpCode,
       });
 
-      // Store tokens securely
-      // For production, use AsyncStorage or SecureStore:
-       await AsyncStorage.setItem('accessToken', response.data.access);
+      console.log('OTP Verification Response:', response.data);
+      
+      await AsyncStorage.setItem('accessToken', response.data.access);
       await AsyncStorage.setItem('refreshToken', response.data.refresh);
-      await AsyncStorage.setItem('userPhoneNumber', formattedPhoneNumber); // Store phone number
       await AsyncStorage.setItem('userId', response.data.user_id.toString());
-      // await SecureStore.setItemAsync('refreshToken', response.data.refresh);
-      
-      setUserId(response.data.user_id);
-      
-      Alert.alert(
-        'Success', 
-        `OTP Verified! ${response.data.is_new_user ? 'Welcome, new user!' : 'Welcome back!'}`,
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              // Navigate to home screen or profile setup for new users
-              navigation.navigate(response.data.is_new_user ? 'ProfileSetup' : 'Home');
-            }
-          }
-        ]
-      );
+      await AsyncStorage.setItem('userPhoneNumber', fullPhoneNumber);
+
+      // Check if a city is already selected
+      const userSelectedCity = await AsyncStorage.getItem('userSelectedCity');
+
+      if (userSelectedCity) {
+        // If city is selected, navigate to HomePage
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'HomePage' }], 
+        });
+      } else {
+        // If no city is selected, navigate to CitySelectionScreen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'CitySelection' }],
+        });
+      }
+      setOtp(['', '', '', '', '', '']); // Reset OTP input
+      // setShowOtpInput(false); // Decide if you want to hide OTP input or navigate away
+
     } catch (error) {
-      console.error('Verify OTP Error:', error.response?.data || error.message);
-      Alert.alert('Error', error.response?.data?.error || 'Invalid or expired OTP. Please try again.');
+      console.error('OTP Verification Error:', error.response ? error.response.data : error.message);
+      Alert.alert(
+        'Verification Failed',
+        error.response?.data?.error || 'Invalid OTP or an error occurred. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -141,14 +147,19 @@ const LoginScreen = ({ navigation }) => {
   const handleBack = () => {
     if (showOtpInput) {
       setShowOtpInput(false);
+      setOtp(['', '', '', '', '', '']); // Clear OTP when going back
+      setPhoneNumber(''); // Optionally clear phone number
     } else {
-      navigation.goBack();
+      // Handle navigation back from the phone number input screen if needed
+      // e.g., navigation.goBack(); or specific logic
     }
   };
 
   const handleSkip = () => {
-    // Navigate to the home screen or next screen
-    navigation.navigate('Home');
+    navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomePage' }], // Or your main app screen
+    });
   };
 
   return (
