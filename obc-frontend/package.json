@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-native-otp-verify": "^1.1.8",
+    "react-native-sms-retriever-api": "^1.0.3"
+  }
+}

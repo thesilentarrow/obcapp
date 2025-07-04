@@ -1,0 +1,179 @@
+# ===========================================
+# Root .gitignore for OBC Full-Stack Project
+# ===========================================
+
+# ===== SENSITIVE FILES =====
+# Django settings with secrets
+obc-backend/api/api/settings.py
+**/settings.py
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env*.local
+
+# ===== PYTHON / DJANGO BACKEND =====
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Django migrations (optional - uncomment if you don't want to track migrations)
+# **/migrations/
+
+# ===== NODE.JS / REACT NATIVE FRONTEND =====
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build directories
+/build
+/dist
+web-build/
+
+# React Native / Expo specific
+.expo/
+.expo-shared/
+expo-env.d.ts
+
+# Metro bundler
+.metro-health-check*
+
+# ===== MOBILE DEVELOPMENT =====
+# iOS specific
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcuserdata
+DerivedData/
+
+# Android specific
+android/app/build/
+android/build/
+android/gradle/
+android/local.properties
+*.jks
+*.keystore
+
+# React Native specific
+*.orig.*
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ===== IDE / EDITOR =====
+# VSCode
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ===== OPERATING SYSTEM =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.pem
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===== LOGS =====
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== TESTING =====
+coverage/
+*.lcov
+.nyc_output
+.coverage
+htmlcov/
+.pytest_cache/
+.cache
+
+# ===== MISC =====
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Database dumps
+*.sql
+*.dump
+
+# Backup files
+*.bak
+*.backup
