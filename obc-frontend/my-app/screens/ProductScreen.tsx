@@ -10,7 +10,8 @@ import {
   Alert,
   Dimensions,
   StatusBar,
-  Platform
+  Platform,
+  Image
 } from 'react-native'; 
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -42,6 +43,12 @@ export type ServiceData = {
   duration: string;
   image: string;
   is_featured: boolean;
+  is_recommended?: boolean;
+  original_price?: string | null;
+  discount_percentage?: string;
+  promo_price?: string | null;
+  promo_text?: string;
+  membership_savings?: string;
 };
 
 type CategoryData = {
@@ -63,13 +70,14 @@ type APIResponse = {
   };
 };
 
-const API_URL = 'https://0eaa-143-244-61-134.ngrok-free.app';
+const API_URL = 'https://0pcdlz8k-8000.inc1.devtunnels.ms/';
 
 const ProductScreen = ({ navigation, route }: Props) => {
   const { categorySlug, categoryName } = route.params;
   const [services, setServices] = useState<ServiceData[]>([]);
   const [category, setCategory] = useState<CategoryData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedServiceId, setExpandedServiceId] = useState<number | null>(null);
   
   // Use CarContext for global car state management
   const { state: carState } = useCarContext();
@@ -92,10 +100,33 @@ const ProductScreen = ({ navigation, route }: Props) => {
       console.log('Car context for pricing:', carForPricing.getPricingContext());
       
       const response = await axios.get<APIResponse>(url);
-      setServices(response.data.services);
+
+      const getServiceRank = (serviceHeader: string): number => {
+        const lowerCaseHeader = serviceHeader.toLowerCase();
+        if (lowerCaseHeader.includes('comprehensive')) return 1;
+        if (lowerCaseHeader.includes('standard')) return 2;
+        if (lowerCaseHeader.includes('basic')) return 3;
+        return 4;
+      };
+
+      const sortedServices = response.data.services.sort((a, b) => {
+        return getServiceRank(a.header) - getServiceRank(b.header);
+      });
+      
+      // Add mock data for demonstration (replace with actual API data)
+      const servicesWithMockData = response.data.services.map((service, index) => ({
+        ...service,
+        is_recommended: index === 0,
+        original_price: service.display_price ? (parseInt(service.display_price) * 1.3).toString() : null,
+        discount_percentage: index === 0 ? '30' : '20',
+        promo_price: service.display_price ? (parseInt(service.display_price) - 1500).toString() : null,
+        promo_text: 'Extra ₹1500 OFF',
+        membership_savings: '15'
+      }));
+      
+      setServices(servicesWithMockData);
       setCategory(response.data.category);
       
-      // Log pricing context for debugging
       if (response.data.pricing_context) {
         console.log('Pricing context from API:', response.data.pricing_context);
       }
@@ -107,146 +138,146 @@ const ProductScreen = ({ navigation, route }: Props) => {
     }
   }, [categorySlug, carState.selectedBrand, carState.selectedModel, carState.selectedFuel, carState.selectedCity]);
 
-  // Use useMemo to create a stable hash of car details to prevent duplicate calls
   const carDetailsHash = useMemo(() => {
-    // Only create hash when car selection is completed to avoid intermediate states
     if (carState.hasCompletedSelection) {
       return `${carState.selectedBrand || ''}-${carState.selectedModel || ''}-${carState.selectedFuel || ''}-${carState.selectedCity || ''}`;
     }
-    // Return a stable value when car selection is not complete
     return 'no-car-selected';
   }, [carState.hasCompletedSelection, carState.selectedBrand, carState.selectedModel, carState.selectedFuel, carState.selectedCity]);
 
-  // Use useEffect with proper debouncing
   useEffect(() => {
-    // Add a small delay to batch multiple rapid state changes
     const timeoutId = setTimeout(() => {
       fetchServices();
-    }, 100); // 100ms debounce
+    }, 100);
 
     return () => clearTimeout(timeoutId);
   }, [fetchServices]);
+
+  const handleToggleDetails = (serviceId: number) => {
+    setExpandedServiceId(prevId => (prevId === serviceId ? null : serviceId));
+  };
 
   const handleServiceSelect = (service: ServiceData) => {
     navigation.navigate('ServiceDetailScreen', { service });
   };
 
-  const renderServiceCard = (service: ServiceData, index: number) => (
-    <TouchableOpacity
-      key={service.id}
-      style={[
-        styles.serviceCard,
-        service.is_featured && styles.featuredServiceCard,
-        { marginTop: index === 0 ? 0 : 12 }
-      ]}
-      onPress={() => handleServiceSelect(service)}
-      activeOpacity={0.95}
-    >
-      {/* Service Header */}
-      <View style={styles.serviceHeader}>
-        <View style={styles.serviceTitleContainer}>
-          <Text style={styles.serviceTitle} numberOfLines={2}>
-            {service.header}
-          </Text>
-          {service.is_featured && (
-            <View style={styles.featuredBadge}>
-              <Ionicons name="star" size={12} color="#FFFFFF" />
-              <Text style={styles.featuredText}>Popular</Text>
-            </View>
-          )}
-        </View>
-        
-        {/* Price Display */}
-        <View style={styles.priceContainer}>
-          {service.display_price ? (
-            <View style={styles.priceWrapper}>
-              <Text style={styles.priceText}>₹{service.display_price}</Text>
-              {service.real_price && service.real_price !== service.price && (
-                <View style={styles.priceTypeIndicator}>
-                  <Text style={styles.priceTypeText}>Real-time</Text>
+  const renderServiceCard = (service: ServiceData, index: number) => {
+    const isExpanded = expandedServiceId === service.id;
+    
+    // Split the details if they come as a single string with newlines
+    const detailsArray = service.details_list.length === 1 && service.details_list[0].includes('\n') 
+      ? service.details_list[0].split('\n').filter(item => item.trim() !== '')
+      : service.details_list;
+      
+    const detailsToShow = isExpanded ? detailsArray : detailsArray.slice(0, 2);
+    
+    return (
+      <View key={service.id} style={[styles.serviceCard, { marginTop: index === 0 ? 0 : 16 }]}>
+        {/* Recommended Tag */}
+        {service.is_recommended && (
+          <View style={styles.recommendedTag}>
+            <Text style={styles.recommendedText}>RECOMMENDED</Text>
+          </View>
+        )}
+
+        <View style={styles.cardContent}>
+          {/* Left Content */}
+          <View style={styles.leftContent}>
+            {/* Service Title */}
+            <Text style={styles.serviceTitle}>{service.header}</Text>
+            
+            <View style={styles.serviceDetails}>
+              {detailsToShow.map((detail, detailIndex) => (
+                <View key={detailIndex} style={styles.detailItem}>
+                  <Text style={styles.bulletPoint}>•</Text>
+                  <Text style={styles.detailText}>
+                    {detail.trim()}
+                  </Text>
                 </View>
+              ))}
+              {detailsArray.length > 4 && (
+                <TouchableOpacity 
+                  onPress={() => handleToggleDetails(service.id)}
+                  style={styles.toggleDetailsButton}
+                >
+                  <Text style={styles.moreItemsText}>
+                    {isExpanded ? 'Show less' : `show more items...`}
+                  </Text>
+                  <Ionicons 
+                    name={isExpanded ? "chevron-up" : "chevron-down"} 
+                    size={14} 
+                    color="#6B7280" 
+                  />
+                </TouchableOpacity>
               )}
             </View>
-          ) : carForPricing.hasCarDetails ? (
-            // Show NA when car is selected but no specific price available
-            <View style={styles.priceWrapper}>
-              <Text style={styles.naPriceText}>NA</Text>
-              <View style={styles.priceTypeIndicator}>
-                <Text style={styles.priceTypeText}>Car-specific</Text>
-              </View>
-            </View>
-          ) : (
-            // Show generic message when no car selected
-            <View style={styles.priceWrapper}>
-              <Text style={styles.selectCarPriceText}>Select car for pricing</Text>
-            </View>
-          )}
-        </View>
-      </View>
 
-      {/* Service Details */}
-      <View style={styles.serviceContent}>
-        <Text style={styles.includesLabel}>What's included:</Text>
-        <View style={styles.detailsList}>
-          {service.details_list.slice(0, 3).map((detail, detailIndex) => (
-            <View key={detailIndex} style={styles.detailItem}>
-              <View style={styles.checkIcon}>
-                <Ionicons name="checkmark" size={14} color="#27AE60" />
+            {/* Price Section */}
+            <View style={styles.priceSection}>
+              <View style={styles.priceRow}>
+                {service.original_price && (
+                  <Text style={styles.originalPrice}>₹{service.original_price}</Text>
+                )}
+                {service.display_price && (
+                  <Text style={styles.currentPrice}>₹{service.display_price}</Text>
+                )}
+                {service.discount_percentage && (
+                  <Text style={styles.discountPercentage}>{service.discount_percentage}% OFF</Text>
+                )}
               </View>
-              <Text style={styles.detailText} numberOfLines={1}>
-                {detail}
-              </Text>
+              
+              {/* Promo Section
+              {service.promo_price && service.promo_text && (
+                <View style={styles.promoSection}>
+                  <View style={styles.promoIcon}>
+                    <Text style={styles.promoEmoji}>🎉</Text>
+                  </View>
+                  <Text style={styles.promoText}>Get at ₹{service.promo_price}</Text>
+                  <View style={styles.promoTag}>
+                    <Text style={styles.promoTagText}>{service.promo_text}</Text>
+                  </View>
+                </View>
+              )} */}
             </View>
-          ))}
-          {service.details_list.length > 3 && (
-            <Text style={styles.moreItemsText}>
-              +{service.details_list.length - 3} more services included
-            </Text>
-          )}
-        </View>
-      </View>
 
-      {/* Service Footer */}
-      <View style={styles.serviceFooter}>
-        <View style={styles.durationContainer}>
-          {service.duration && (
-            <View style={styles.durationBadge}>
-              <Ionicons name="time-outline" size={14} color="#757575" />
-              <Text style={styles.durationText}>{service.duration}</Text>
+            {/* Membership Savings */}
+            {/* {service.membership_savings && (
+              <View style={styles.membershipSection}>
+                <Text style={styles.membershipText}>
+                  Save Extra {service.membership_savings}% with Miles Membership
+                </Text>
+                <TouchableOpacity style={styles.addButton}>
+                  <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            )} */}
+          </View>
+
+          {/* Right Content - Image and Added Button */}
+          <View style={styles.rightContent}>
+            <View style={styles.imageContainer}>
+              <Image 
+      source={require('../assets/service.png')}
+      style={styles.serviceImage}
+      resizeMode="cover"
+    />
+              <TouchableOpacity style={styles.addedButton}>
+                <Text style={styles.addedButtonText}>ADD</Text>
+              </TouchableOpacity>
             </View>
-          )}
+            
+            
+          </View>
         </View>
-        
-        <TouchableOpacity 
-          style={[
-            styles.selectButton,
-            service.is_featured && styles.featuredSelectButton
-          ]}
-          onPress={() => handleServiceSelect(service)}
-          activeOpacity={0.8}
-        >
-          <Text style={[
-            styles.selectButtonText,
-            service.is_featured && styles.featuredSelectButtonText
-          ]}>
-            Select
-          </Text>
-          <Ionicons 
-            name="arrow-forward" 
-            size={16} 
-            color={service.is_featured ? "#FFFFFF" : "#000000"} 
-          />
-        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
             onPress={() => navigation.goBack()} 
@@ -257,7 +288,6 @@ const ProductScreen = ({ navigation, route }: Props) => {
           <Text style={styles.headerTitle}>Loading...</Text>
         </View>
 
-        {/* Loading State */}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#000000" />
           <Text style={styles.loadingText}>Finding the best services for you...</Text>
@@ -281,6 +311,22 @@ const ProductScreen = ({ navigation, route }: Props) => {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {category?.name || categoryName}
         </Text>
+        <TouchableOpacity style={styles.searchButton}>
+          <Ionicons name="search" size={24} color="#000000" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Category Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+          <Text style={[styles.tabText, styles.activeTabText]}>Scheduled Packages</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tab}>
+          <Text style={styles.tabText}>Brake Maintenance</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tab}>
+          <Text style={styles.tabText}>Urgent</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
@@ -288,56 +334,10 @@ const ProductScreen = ({ navigation, route }: Props) => {
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        {/* Category Introduction */}
-        {category && (
-          <View style={styles.categoryIntro}>
-            <Text style={styles.categoryTitle}>{category.name}</Text>
-            {category.description && (
-              <Text style={styles.categoryDescription}>
-                {category.description}
-              </Text>
-            )}
-            <View style={styles.servicesCount}>
-              <Text style={styles.servicesCountText}>
-                {services.length} service{services.length !== 1 ? 's' : ''} available
-              </Text>
-            </View>
-            
-            {/* Car Selection Status */}
-            <View style={styles.carSelectionContainer}>
-              {carForPricing.hasCarDetails ? (
-                <View style={styles.carContextInfo}>
-                  <Text style={styles.carContextLabel}>Pricing for:</Text>
-                  <Text style={styles.carContextText}>
-                    {carForPricing.getPricingContext()}
-                  </Text>
-                  <TouchableOpacity 
-                    style={styles.changeCarButton}
-                    onPress={() => navigation.navigate('CitySelection')}
-                  >
-                    <Text style={styles.changeCarText}>Change Car</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity 
-                  style={styles.selectCarButton}
-                  onPress={() => navigation.navigate('CitySelection')}
-                >
-                  <Ionicons name="car-outline" size={20} color="#000000" />
-                  <Text style={styles.selectCarText}>Select Your Car for Real-time Pricing</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
         {/* Services List */}
         <View style={styles.servicesContainer}>
           {services.length > 0 ? (
-            <>
-              <Text style={styles.sectionTitle}>Choose a service</Text>
-              {services.map((service, index) => renderServiceCard(service, index))}
-            </>
+            services.map((service, index) => renderServiceCard(service, index))
           ) : (
             <View style={styles.emptyState}>
               <Ionicons name="search-outline" size={64} color="#E0E0E0" />
@@ -345,17 +345,10 @@ const ProductScreen = ({ navigation, route }: Props) => {
               <Text style={styles.emptyStateDescription}>
                 We're working on adding more services to this category
               </Text>
-              <TouchableOpacity 
-                style={styles.retryButton}
-                onPress={fetchServices}
-              >
-                <Text style={styles.retryButtonText}>Try Again</Text>
-              </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </SafeAreaView>
@@ -365,7 +358,7 @@ const ProductScreen = ({ navigation, route }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
@@ -387,6 +380,38 @@ const styles = StyleSheet.create({
     color: '#000000',
     flex: 1,
   },
+  searchButton: {
+    padding: 8,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#E5E5E5',
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 12,
+    backgroundColor: '#F5F5F5',
+  },
+  activeTab: {
+    backgroundColor: '#E8F2FF',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -402,270 +427,210 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  categoryIntro: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    marginBottom: 8,
-  },
-  categoryTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 8,
-  },
-  categoryDescription: {
-    fontSize: 16,
-    color: '#757575',
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  servicesCount: {
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-  },
-  servicesCountText: {
-    fontSize: 14,
-    color: '#757575',
-    fontWeight: '500',
-  },
-  carSelectionContainer: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  carContextInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  carContextLabel: {
-    fontSize: 14,
-    color: '#757575',
-    fontWeight: '500',
-  },
-  carContextText: {
-    fontSize: 14,
-    color: '#000000',
-    fontWeight: '600',
-    flex: 1,
-  },
-  changeCarButton: {
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  changeCarText: {
-    fontSize: 12,
-    color: '#000000',
-    fontWeight: '500',
-  },
-  selectCarButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    gap: 8,
-  },
-  selectCarText: {
-    fontSize: 14,
-    color: '#000000',
-    fontWeight: '500',
-    flex: 1,
   },
   servicesContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 16,
+    padding: 20,
   },
   serviceCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  featuredServiceCard: {
-    borderColor: '#000000',
-    borderWidth: 1.5,
     shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowRadius: 8,
     elevation: 4,
+    position: 'relative',
   },
-  serviceHeader: {
+  recommendedTag: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderTopLeftRadius: 16,
+    borderBottomRightRadius: 12,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 0,
+    zIndex: 1,
+  },
+  recommendedText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    padding: 20,
+    paddingTop: 40,
   },
-  serviceTitleContainer: {
+  leftContent: {
     flex: 1,
     paddingRight: 16,
   },
   serviceTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  featuredBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#000000',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  featuredText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 4,
-  },
-  priceContainer: {
-    alignItems: 'flex-end',
-  },
-  priceWrapper: {
-    alignItems: 'flex-end',
-  },
-  priceText: {
-    fontSize: 24,
     fontWeight: '700',
-    color: '#000000',
-  },
-  naPriceText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#9E9E9E',
-  },
-  selectCarPriceText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#757575',
-    fontStyle: 'italic',
-  },
-  priceTypeIndicator: {
-    backgroundColor: '#27AE60',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  priceTypeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  serviceContent: {
-    marginBottom: 20,
-  },
-  includesLabel: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#000000',
     marginBottom: 12,
   },
-  detailsList: {
-    marginBottom: 4,
+  serviceDetails: {
+    marginBottom: 16,
   },
   detailItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  bulletPoint: {
+    fontSize: 16,
+    color: '#666666',
+    marginRight: 8,
+    marginTop: 2,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666666',
+    flex: 1,
+    lineHeight: 20,
+  },
+  toggleDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  moreItemsText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  priceSection: {
+    marginBottom: 16,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  originalPrice: {
+    fontSize: 16,
+    color: '#999999',
+    textDecorationLine: 'line-through',
+    marginRight: 8,
+  },
+  currentPrice: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#000000',
+    marginRight: 8,
+  },
+  discountPercentage: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  promoSection: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  checkIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#E8F5E8',
-    alignItems: 'center',
+  promoIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFF3E0',
     justifyContent: 'center',
-    marginRight: 12,
-  },
-  detailText: {
-    fontSize: 15,
-    color: '#333333',
-    flex: 1,
-    lineHeight: 20,
-  },
-  moreItemsText: {
-    fontSize: 14,
-    color: '#757575',
-    marginLeft: 32,
-    fontWeight: '500',
-  },
-  serviceFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  durationContainer: {
-    flex: 1,
-  },
-  durationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-  },
-  durationText: {
-    fontSize: 14,
-    color: '#757575',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  selectButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  featuredSelectButton: {
-    backgroundColor: '#000000',
-    borderColor: '#000000',
-  },
-  selectButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
     marginRight: 8,
   },
-  featuredSelectButtonText: {
+  promoEmoji: {
+    fontSize: 12,
+  },
+  promoText: {
+    fontSize: 16,
+    color: '#000000',
+    fontWeight: '500',
+    marginRight: 8,
+  },
+  promoTag: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  promoTagText: {
     color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  membershipSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  membershipText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+    flex: 1,
+  },
+  addButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  rightContent: {
+    alignItems: 'center',
+  },
+  imageContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  serviceImage: {
+    
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+  },
+  addedButton: {
+  position: 'absolute',
+  bottom: -8,
+  alignSelf: 'center',
+  backgroundColor: '#FF3B30',
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 12,
+},
+  addedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  editButton: {
+    paddingVertical: 4,
+  },
+  editButtonText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   emptyState: {
     alignItems: 'center',
@@ -685,18 +650,6 @@ const styles = StyleSheet.create({
     color: '#757575',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 24,
-  },
-  retryButton: {
-    backgroundColor: '#000000',
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 25,
-  },
-  retryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   bottomSpacing: {
     height: 40,

@@ -11,15 +11,20 @@ import {
   Platform,
   StatusBar,
   Dimensions,
+  FlatList,
 } from 'react-native';
+
 import { createStackNavigator } from '@react-navigation/stack';
+// import LinearGradient from 'react-native-linear-gradient';
 
 // If needed, add this import
 import { RootStackParamList } from '../types/navigation';
 import type {StackNavigationProp} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage'; //for checkig login status
 import { useCarContext } from '../contexts/CarContext';
-import MembershipDetailsScreen from './MembershipDetailsScreen'; // Import the MembershipCard component
+
+// Import the MembershipCard component
+import MembershipDetailsScreen from './MembershipDetailsScreen'; 
 // Define the app's navigation param types
 // type RootStackParamList = {
 //   Home: undefined;
@@ -370,131 +375,113 @@ import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 
 // Service Icon Components
 const PeriodicServiceIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 30 30">
-    <Circle cx="15" cy="15" r="12" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M6,9.3L3.9,5.8l1.4-1.4l3.5,2.1v1.4l3.6,3.6c0,0.1,0,0.2,0,0.3L11.1,13L7.4,9.3H6z M21,17.8c-0.3,0-0.5,0-0.8,0 c0,0,0,0,0,0c-0.7,0-1.3-0.1-1.9-0.2l-2.1,2.4l4.7,5.3c1.1,1.2,3,1.3,4.1,0.1c1.2-1.2,1.1-3-0.1-4.1L21,17.8z M24.4,14 c1.6-1.6,2.1-4,1.5-6.1c-0.1-0.4-0.6-0.5-0.8-0.2l-3.5,3.5l-2.8-2.8l3.5-3.5c0.3-0.3,0.2-0.7-0.2-0.8C20,3.4,17.6,3.9,16,5.6 c-1.8,1.8-2.2,4.6-1.2,6.8l-10,8.9c-1.2,1.1-1.3,3-0.1,4.1l0,0c1.2,1.2,3,1.1,4.1-0.1l8.9-10C19.9,16.3,22.6,15.9,24.4,14z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/periodic_service.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const ACServiceIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M22,11h-4.17l3.24-3.24l-1.41-1.41L15,11h-2V9l4.66-4.66l-1.42-1.41L13,6.17V2h-2v4.17L7.76,2.93L6.34,4.34L11,9v2H9L4.34,6.34 L2.93,7.76L6.17,11H2v2h4.17l-3.24,3.24l1.41,1.41L9,13h2v2l-4.66,4.66l1.42,1.41L11,17.83V22h2v-4.17l3.24,3.24l1.42-1.41L13,15v-2h2 l4.66,4.66l1.41-1.42L17.83,13H22V11z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/ac_service.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const TyreWheelIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    
-    <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
-    <Circle cx="12" cy="12" r="8" fill="#444444" />
-    <Circle cx="12" cy="12" r="3" fill="#F0F0F0" />
-    <Path
-      fill="#E53935"
-      d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8 S16.42,20,12,20z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/wheel_care.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const BatteryIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Rect x="4" y="8" width="16" height="12" rx="1" fill="#F0F0F0" />
-    <Rect x="9" y="6" width="6" height="2" fill="#E53935" />
-    <Path
-      fill="#E53935"
-      d="M15.67,4H14V2h-4v2H8.33C7.6,4,7,4.6,7,5.33v15.33C7,21.4,7.6,22,8.33,22h7.33c0.74,0,1.34-0.6,1.34-1.33V5.33 C17,4.6,16.4,4,15.67,4z M13,18h-2v-2h2V18z M13,14h-2V8h2V14z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/battery_icon.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const DentingPaintingIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M7,14c-1.66,0-3,1.34-3,3c0,1.31-1.16,2-2,2c0.92,1.22,2.49,2,4,2c2.21,0,4-1.79,4-4C10,15.34,8.66,14,7,14z M20.71,4.63 l-1.34-1.34c-0.39-0.39-1.02-0.39-1.41,0L9,12.25L11.75,15l8.96-8.96C21.1,5.65,21.1,5.02,20.71,4.63z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_paint.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const CarSpaIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M18.39,14.56C16.71,13.7,14.53,13,12,13c-2.53,0-4.71,0.7-6.39,1.56C4.61,15.07,4,16.1,4,17.22V20h16v-2.78 C20,16.1,19.39,15.07,18.39,14.56z M9.78,12h4.44c1.21,0,2.14-1.06,1.98-2.26l-0.32-2.45C15.57,5.39,13.92,4,12,4S8.43,5.39,8.12,7.29 L7.8,9.74C7.64,10.94,8.57,12,9.78,12z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_spa.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const DetailingIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M18.92,6.01C18.72,5.42,18.16,5,17.5,5h-11C5.84,5,5.29,5.42,5.08,6.01L3,12v8c0,0.55,0.45,1,1,1h1c0.55,0,1-0.45,1-1v-1 h12v1c0,0.55,0.45,1,1,1h1c0.55,0,1-0.45,1-1v-8L18.92,6.01z M6.5,16C5.67,16,5,15.33,5,14.5S5.67,13,6.5,13S8,13.67,8,14.5 S7.33,16,6.5,16z M17.5,16c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S18.33,16,17.5,16z M5,11l1.5-4.5h11L19,11 H5z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_detail.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const CarServicesIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
-    <Path
-      fill="#E53935"
-      d="M19,3h-4.18C14.4,1.84,13.3,1,12,1S9.6,1.84,9.18,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5 C21,3.9,20.1,3,19,3z M12,2.75c0.41,0,0.75,0.34,0.75,0.75S12.41,4.25,12,4.25s-0.75-0.34-0.75-0.75S11.59,2.75,12,2.75z M9.1,17.1 l-2.83-2.83l1.41-1.41l1.41,1.41L14.8,8.6l1.41,1.41L9.1,17.1z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_service.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-  </Svg>
+  </View>
 );
 
 const ClutchIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#FFE0E0" />
-    <Path
-      fill="#E53935"
-      d="M15.5,14h-0.79l-0.28-0.27C15.41,12.59,16,11.11,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5C3,13.09,5.91,16,9.5,16 c1.61,0,3.09-0.59,4.23-1.57l0.27,0.28v0.79l5,4.99L20.49,19L15.5,14z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5 S11.99,14,9.5,14z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_parts.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-    <Path
-      fill="#E53935"
-      d="M7.5,9.5h4v1h-4V9.5z"
-    />
-  </Svg>
+  </View>
 );
 
 const WindshieldIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
-    <Path
-      fill="#E53935"
-      d="M18.25,3.5H5.75C4.78,3.5,4,4.28,4,5.25v12.5c0,0.97,0.78,1.75,1.75,1.75h12.5c0.97,0,1.75-0.78,1.75-1.75V5.25 C20,4.28,19.22,3.5,18.25,3.5z M18,17.75H6c-0.41,0-0.75-0.34-0.75-0.75V6c0-0.41,0.34-0.75,0.75-0.75h12c0.41,0,0.75,0.34,0.75,0.75 v11C18.75,17.41,18.41,17.75,18,17.75z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/wind_shield.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-    <Path
-      fill="#E53935"
-      d="M17,7l-7,7l-3-3l-1.5,1.5L9,16l8.5-8.5L17,7z"
-    />
-  </Svg>
+  </View>
 );
 
 const SuspensionIcon = () => (
-  <Svg height="40" width="40" viewBox="0 0 24 24">
-    <Circle cx="12" cy="12" r="10" fill="#F0F0F0" />
-    <Circle cx="9" cy="8" r="2" fill="#E53935" />
-    <Circle cx="15" cy="8" r="2" fill="#E53935" />
-    <Path
-      fill="#E53935"
-      d="M9,14h6v1.5H9z"
+  <View style={{ width: 40, height: 40, justifyContent: 'center', alignItems: 'center' }}>
+    <Image 
+      source={require('../assets/car_sus.png')} // Replace with your actual PNG file path
+      style={{ width: 40, height: 40 }}
+      resizeMode="contain"
     />
-    <Path
-      fill="#E53935"
-      d="M19.21,12.94L17.29,11l-1.42,1.42L18.8,15.34L19.21,12.94z M6.71,11L4.79,12.94l0.41,2.39l2.93-2.92L6.71,11z"
-    />
-  </Svg>
+  </View>
 );
 
 const InsuranceIcon = () => (
@@ -535,15 +522,29 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [isLoadingCity, setIsLoadingCity] = useState(true);
-  const isFocused = useIsFocused(); // Hook to check if the screen is focused
-  const flatListRef = useRef<ScrollView>(null);
+  const isFocused = useIsFocused();
+  const flatListRef = useRef<FlatList>(null); // Use FlatList ref
   
+  // Add new state for progress tracking
+  const [progress, setProgress] = useState(0);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  
+  // Add refs for timer management
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoScrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Add screen width
+  const screenWidth = Dimensions.get('window').width;
+
   // Use CarContext for global car state
   const { state: carState, hasSelectedCar, getCarDisplayText } = useCarContext();
 
-  
+  // Configuration constants
+  const CAROUSEL_DURATION = 3000; // 3 seconds per slide
+  const PROGRESS_INTERVAL = 30; // Update progress every 30ms for smooth animation
+
   // Services data
-  const services = [
+   const services = [
     { 
       id: 'periodic', 
       title: 'Periodic\nServices', 
@@ -561,54 +562,9 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     //   badge: 'Season Sale'
     },
     { 
-      id: 'tyre', 
-      title: 'Tyres&\nWheel Care', 
-      icon: <TyreWheelIcon />,
-      categorySlug: 'tyre-wheel-care',
-      categoryName: 'Tyres & Wheel Care'
-    //   badge: ''
-    },
-    { 
-      id: 'battery', 
-      title: 'Batteries', 
-      icon: <BatteryIcon />,
-      categorySlug: 'battery-services',
-      categoryName: 'Battery Services'
-    },
-    { 
       id: 'denting', 
       title: 'Denting&\nPainting', 
       icon: <DentingPaintingIcon />,
-      badge: ''
-    },
-    { 
-      id: 'spa', 
-      title: 'Car Spa &\nPainting', 
-      icon: <CarSpaIcon />,
-    //   badge: 'Trending Now'
-    },
-    { 
-      id: 'detailing', 
-      title: 'Detailing\nServices', 
-      icon: <DetailingIcon />,
-      badge: ''
-    },
-    { 
-      id: 'carservices', 
-      title: 'Car\nServices', 
-      icon: <CarServicesIcon />,
-      badge: ''
-    },
-    { 
-      id: 'clutch', 
-      title: 'Clutch&\nBody Parts', 
-      icon: <ClutchIcon />,
-      badge: ''
-    },
-    { 
-      id: 'windshield', 
-      title: 'Windshield\n& Lights', 
-      icon: <WindshieldIcon />,
       badge: ''
     },
     { 
@@ -618,10 +574,55 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     //   badge: 'Free Inspection'
     },
     { 
+      id: 'clutch', 
+      title: 'Clutch&\nBody Parts', 
+      icon: <ClutchIcon />,
+      badge: ''
+    },
+    { 
+      id: 'detailing', 
+      title: 'Detailing\nServices', 
+      icon: <DetailingIcon />,
+      badge: ''
+    },
+    { 
+      id: 'spa', 
+      title: 'Car \nGrooming', 
+      icon: <CarSpaIcon />,
+    //   badge: 'Trending Now'
+    },
+    { 
+      id: 'battery', 
+      title: 'Batteries', 
+      icon: <BatteryIcon />,
+      categorySlug: 'battery-services',
+      categoryName: 'Battery Services'
+    },
+    { 
+      id: 'tyre', 
+      title: 'Tyre Services', 
+      icon: <TyreWheelIcon />,
+      categorySlug: 'tyre-wheel-care',
+      categoryName: 'Tyres & Wheel Care'
+    //   badge: ''
+    },
+    { 
+      id: 'windshield', 
+      title: 'Windshield\n& Lights', 
+      icon: <WindshieldIcon />,
+      badge: ''
+    },
+    { 
       id: 'insurance', 
       title: 'Insurance\nClaims', 
       icon: <InsuranceIcon />,
     //   badge: 'Cashless Claims'
+    },
+     { 
+      id: 'carService', 
+      title: 'Car\nServices', 
+      icon: <CarServicesIcon />,
+      badge: ''
     },
   ];
   // const isFocused = useIsFocused();
@@ -664,19 +665,20 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
 
     // Auto-scroll banner logic
     const timer = setInterval(() => {
-      setCurrentBannerIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % banners.length;
-        if (flatListRef.current) {
-          flatListRef.current.scrollTo({
-            x: nextIndex * (Dimensions.get('window').width - 20), // Adjust width based on your banner styling
-            animated: true,
-          });
-        }
-        return nextIndex;
-      });
-    }, 5000); // Change banner every 5 seconds
+    setCurrentBannerIndex((prevIndex) => {
+      const nextIndex = (prevIndex + 1) % carouselItems.length; // Use carouselItems instead of banners
+      if (flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+      }
+      return nextIndex;
+    });
+  }, 4000);
 
-    return () => clearInterval(timer); // Cleanup timer on unmount
+  return () => clearInterval(timer);
+// Cleanup timer on unmount
 
   }, [isFocused, banners.length]);
 
@@ -700,6 +702,13 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     { id: '5', type: 'empty' },
   ];
 
+  // Handle scroll for FlatList
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / (screenWidth));
+    setActiveCarouselIndex(index);
+  };
+
   const handleServicePress = (service: typeof services[0]) => {
     console.log(`Service pressed: ${service.title}`);
     if (service.categorySlug && service.categoryName) {
@@ -714,23 +723,80 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     }
   }
 
-  // Function to go to next carousel item
-  const nextCarouselItem = () => {
-    setActiveCarouselIndex((prevIndex) => 
-      prevIndex === carouselItems.length - 1 ? 0 : prevIndex + 1
-    );
-  };
+  // Carousel auto-scroll and progress management
+  useEffect(() => {
+    if (!isAutoScrolling) return;
 
-  // Function to go to previous carousel item
-  const prevCarouselItem = () => {
-    setActiveCarouselIndex((prevIndex) => 
-      prevIndex === 0 ? carouselItems.length - 1 : prevIndex - 1
-    );
+    const startProgress = () => {
+      setProgress(0);
+      
+      // Clear any existing timers
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+      
+      // Start progress animation
+      progressTimerRef.current = setInterval(() => {
+        setProgress((prevProgress) => {
+          const newProgress = prevProgress + (PROGRESS_INTERVAL / CAROUSEL_DURATION) * 100;
+          
+          if (newProgress >= 100) {
+            // Progress complete, move to next slide
+            const nextIndex = activeCarouselIndex === carouselItems.length - 1 ? 0 : activeCarouselIndex + 1;
+            setActiveCarouselIndex(nextIndex);
+            
+            // Auto-scroll FlatList
+            flatListRef.current?.scrollToIndex({
+              index: nextIndex,
+              animated: true,
+            });
+            
+            return 0; // Reset progress for next slide
+          }
+          
+          return newProgress;
+        });
+      }, PROGRESS_INTERVAL);
+    };
+
+    startProgress();
+
+    return () => {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+    };
+  }, [activeCarouselIndex, isAutoScrolling, carouselItems.length]);
+
+  // Pause auto-scroll when user manually navigates
+  const handleManualNavigation = (newIndex: number) => {
+    setIsAutoScrolling(false);
+    setActiveCarouselIndex(newIndex);
+    setProgress(0);
+    
+    // Clear existing timers
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+    }
+    if (autoScrollTimerRef.current) {
+      clearTimeout(autoScrollTimerRef.current);
+    }
+    
+    // Scroll to the selected index
+    flatListRef.current?.scrollToIndex({
+      index: newIndex,
+      animated: true,
+    });
+    
+    // Resume auto-scrolling after 3 seconds of inactivity
+    autoScrollTimerRef.current = setTimeout(() => {
+      setIsAutoScrolling(true);
+    }, 3000);
   };
 
   // Function to directly navigate to a specific carousel item
   const goToCarouselItem = (index: number) => {
-    setActiveCarouselIndex(index);
+    handleManualNavigation(index);
   };
 
   const checkIsUserLoggedIn = async(): Promise<boolean>=>{
@@ -771,13 +837,15 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
     <>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#FFFFFF"
-        translucent={false}
+        backgroundColor="rgba(229, 57, 53, 0.1)" // Make status bar slightly tinted
+        translucent={true}
       />
       <SafeAreaView style={styles.container}>
         {/* Location Header - Updated to match the image */}
-        <View style={styles.locationHeader}>
+        
           
+          {/* Location Header */}
+          <View style={styles.locationHeader}>
             <View style={styles.locationContainer}>
           <LocationIcon />
           <TouchableOpacity
@@ -825,84 +893,100 @@ const HomePageScreen = ({navigation}:HomePageProps) => {
           />
         </View>
         
+        
         {/* Main Content */}
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Banner Carousel */}
-          <View style={styles.bannerContainer}>
-            <View style={styles.banner}>
-              {carouselItems[activeCarouselIndex].type === 'image' && (
-                <Image 
-                  source={carouselItems[activeCarouselIndex].source} 
-                  style={styles.bannerBackground}
-                />
-              )}
-              
-              {carouselItems[activeCarouselIndex].type === 'svg' && (
-                <View style={[styles.bannerBackground, { backgroundColor: '#FFE0E0' }]}>
-                  {/* Add your SVG elements here */}
-                  <Svg height="100%" width="100%" viewBox="0 0 100 100">
-                    <Circle cx="50" cy="50" r="40" fill="#E53935" opacity="0.3" />
-                    <Circle cx="70" cy="30" r="20" fill="#E53935" opacity="0.5" />
-                  </Svg>
+           <View style={styles.bannerContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={carouselItems}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleScroll}
+              snapToInterval={screenWidth}
+              decelerationRate="fast"
+              contentContainerStyle={{ paddingHorizontal: 0 }}
+              renderItem={({ item }) => (
+                <View style={[styles.banner, { width: screenWidth - 20 }]}>
+                  {item.type === 'image' && (
+                    <Image 
+                      source={item.source} 
+                      style={styles.bannerBackground}
+                    />
+                  )}
+                  
+                  {item.type === 'svg' && (
+                    <View style={[styles.bannerBackground, { backgroundColor: '#FFE0E0' }]}>
+                      <Svg height="100%" width="100%" viewBox="0 0 100 100">
+                        <Circle cx="50" cy="50" r="40" fill="#E53935" opacity="0.3" />
+                        <Circle cx="70" cy="30" r="20" fill="#E53935" opacity="0.5" />
+                      </Svg>
+                    </View>
+                  )}
+                  
+                  {(item.type === 'image' || item.type === 'svg') && (
+                    <View style={styles.bannerContent}>
+                      <Text style={styles.bannerTitle}>
+                        {item.title}
+                      </Text>
+                      <View style={styles.offerContainer}>
+                        <Text style={styles.offerPercentage}>
+                          {item.offerPercentage}
+                        </Text>
+                        <Text style={styles.offerOff}>
+                          {item.offerText}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                  
+                  {item.type === 'empty' && (
+                    <View style={[styles.bannerBackground, { backgroundColor: '#F5F5F5' }]}>
+                      <View style={styles.emptyBannerContent}>
+                        <Text style={styles.emptyBannerText}>Coming Soon</Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
-              
-              {(carouselItems[activeCarouselIndex].type === 'image' || 
-                carouselItems[activeCarouselIndex].type === 'svg') && (
-                <>
-                  <View style={styles.bannerContent}>
-                    <Text style={styles.bannerTitle}>
-                      {carouselItems[activeCarouselIndex].title}
-                    </Text>
-                    <View style={styles.offerContainer}>
-                      <Text style={styles.offerPercentage}>
-                        {carouselItems[activeCarouselIndex].offerPercentage}
-                        <Text style={styles.offerPercent}></Text>
-                      </Text>
-                      <Text style={styles.offerOff}>
-                        {carouselItems[activeCarouselIndex].offerText}
-                      </Text>
-                    </View>
-                  </View>
-                  
-                </>
-              )}
-              
-              {/* Arrow navigation for carousel */}
-              <TouchableOpacity 
-                style={[styles.carouselArrow, styles.carouselArrowLeft]} 
-                onPress={prevCarouselItem}
-              >
-                <Text style={styles.carouselArrowText}>‹</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.carouselArrow, styles.carouselArrowRight]} 
-                onPress={nextCarouselItem}
-              >
-                <Text style={styles.carouselArrowText}>›</Text>
-              </TouchableOpacity>
-            </View>
+            />
             
-            {/* Carousel Indicators */}
-            <View style={styles.indicators}>
+            {/* Progress Indicators */}
+            <View style={styles.progressIndicators}>
               {carouselItems.map((item, index) => (
                 <TouchableOpacity 
                   key={item.id} 
+                  style={[
+                    styles.progressIndicatorContainer,
+                    index !== activeCarouselIndex && styles.inactiveProgressIndicator
+                  ]}
                   onPress={() => goToCarouselItem(index)}
                 >
-                  <View 
-                    style={[
-                      styles.indicator, 
-                      activeCarouselIndex === index && styles.activeIndicator
-                    ]} 
-                  />
+                  <View style={[
+                    styles.progressIndicatorBackground,
+                    index !== activeCarouselIndex && { height: 2 }
+                  ]}>
+                    <View 
+                      style={[
+                        styles.progressIndicatorFill,
+                        {
+                          width: index === activeCarouselIndex 
+                            ? `${progress}%` 
+                            : index < activeCarouselIndex 
+                              ? '100%' 
+                              : '0%'
+                        }
+                      ]} 
+                    />
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
           
-         
           {/* Services Grid */}
           <View style={styles.servicesContainer}>
             {services.map((service, index) => (
@@ -978,13 +1062,30 @@ const styles = StyleSheet.create({
     // Make sure we're not overlapping the status bar on Android
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
-  locationHeader: {
+
+  headerWithGradient: {
+    position: 'relative',
+    backgroundColor: 'transparent',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 140, // Adjust height to control where gradient ends
+    zIndex: 0,
+  },
+
+   locationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent', // Changed from white to transparent
+    paddingTop:24,
+    position: 'relative',
+    zIndex: 1,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -1071,19 +1172,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bannerContainer: {
-    paddingBottom: 10,
+    paddingBottom: 5,
+    paddingHorizontal: 10,
   },
   banner: {
     height: 180,
-    margin: 10,
-    marginBottom: 1,
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',
     padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    marginHorizontal: 10,
   },
   bannerBackground: {
     position: 'absolute',
@@ -1209,28 +1308,46 @@ const styles = StyleSheet.create({
   activeNavText: {
     color: '#E53935',
   },
-  carouselArrow: {
-    position: 'absolute',
-    top: '50%',
-    zIndex: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
+  // New styles for progress indicators
+ progressIndicators: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: -15, // Half of height to center vertically
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 100,
   },
-  carouselArrowLeft: {
-    left: 10,
+  progressIndicatorContainer: {
+    flex: 1,
+    marginHorizontal: 1,
+    transform: [{ scaleY: 1 }],
   },
-  carouselArrowRight: {
-    right: 10,
+  progressIndicatorBackground: {
+    height: 3,
+    backgroundColor: 'rgba(229, 57, 53, 0.2)',
+    borderRadius: 1.5,
+    overflow: 'hidden',
   },
-  carouselArrowText: {
-    fontSize: 20,
-    color: '#333',
-    fontWeight: 'bold',
+  progressIndicatorFill: {
+    height: '100%',
+    backgroundColor: '#E53935',
+    borderRadius: 1.5,
+  },
+   inactiveProgressIndicator: {
+    flex:0.4,
+    transform: [{ scaleX: 0.5 }], // Make inactive bars 50% smaller
+    opacity: 0.6, // Make them slightly transparent
+    backgroundColor: '#757575',
+    borderRadius: 3,
+  },
+  emptyBannerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyBannerText: {
+    fontSize: 18,
+    color: '#757575',
+    fontWeight: '500',
   },
 });
 

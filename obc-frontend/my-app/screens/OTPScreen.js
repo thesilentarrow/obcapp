@@ -18,7 +18,7 @@ import axios from 'axios'; //axios for api requests.
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
 
 // Replace with your actual backend URL
-const API_URL = 'https://bcc1-143-244-61-134.ngrok-free.app'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
+const API_URL = 'https://0pcdlz8k-8000.inc1.devtunnels.ms/'; // e.g., http://10.0.2.2:8000 for Android emulator accessing localhost
 
 const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
