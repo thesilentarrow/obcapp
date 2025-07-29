@@ -240,6 +240,14 @@ const ProductScreen = ({ navigation, route }: Props) => {
               )} */}
             </View>
 
+             <TouchableOpacity 
+              style={styles.viewDetailsButton} 
+              onPress={() => handleServiceSelect(service)}
+            >
+              <Text style={styles.viewDetailsButtonText}>View Details</Text>
+              <Ionicons name="arrow-forward" size={14} color="#007AFF" />
+            </TouchableOpacity>
+
             {/* Membership Savings */}
             {/* {service.membership_savings && (
               <View style={styles.membershipSection}>
@@ -536,6 +544,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4CAF50',
     fontWeight: '600',
+  },
+  viewDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#E8F2FF',
+    borderRadius: 12,
+    marginTop: -8,
+    marginBottom: 16,
+  },
+  viewDetailsButtonText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
+    marginRight: 6,
   },
   promoSection: {
     flexDirection: 'row',
